@@ -1,9 +1,9 @@
 /*
 	Quelques fonctions utiles que j'ai fabriquées 
 */
-
-
 import("stdfaust.lib");
+
+round(sig) = floor(sig), ceil(sig) : select2( (sig -floor(sig)) > 0.5 ); 
 
 /*
 	Impulsion with a specified duration. Can be retriggered.
@@ -31,30 +31,8 @@ dur_smps_euclidian(onset, div, pulses, rotation, smps_dur, phasor) = euclidian(o
 /*
 	Wavefolder. 
 */
-wavefold(sig) = do_transform(sig), sig : select2((sig > -1) & (sig < 1))
-with {
-    abs_sig = abs(sig);
-    decimal = abs_sig - int(abs_sig);
-    neg_plus_decimal = -1 + decimal;
-    pos_minus_decimal = 1 - decimal;
-    process_value(x) = 1 - decimal, -1 + decimal : select2(x);
-    is_even = ((int(abs_sig) %2) == 0);
-    is_positiv = sig >= 0;
-    do_transform(sig) = process_value( (is_even & is_positiv) | ( (is_even == 0) & (is_positiv == 0)) );
-};
+wavefolder(sig) = 4 * (abs(0.25 * sig + 0.25 - round(0.25 * sig + 0.25))-0.25)
 
-/*
-	Waveshaper with wavefolder.
-*/
-nonlinear_wavefold(amount, sig) = final
-with {
-	transfer_fct = waveform{-1, -1, 1, 1};
-	fold = wavefold(sig);
-	fold_sig = (fold + 1) / 2;
-	nonlinear = transfer_fct, int(fold_sig * 4) : rdtable;
-	final = (nonlinear * amount) + ((1 - amount) * fold);
-
-};
 
 /*
 	Limit to range
@@ -98,59 +76,3 @@ letrec {
 };
 
 
-
-// In frequencies
-fq_to_bpm(fq) = 60 * fq;
-bpm_to_fq(bpm) = bpm / 60;
-metro(fq) = ba.beat(fq_to_bpm(fq));
-swingmetro_par(fq, swing) = m1, m2
-with {
-    m1 = metro(fq);
-    m2 = met
-    with {
-        sw = swing ; //range( 0, 1, swing);
-        ph = os.hs_phasor(1, fq, m1);
-        met = 0, 1 : select2(cond) : ba.impulsify
-        with {
-            cond = (ph >= sw) & (ph' <= sw);
-        };
-    };
-};
-swingmetro(fq,swing) = swingmetro_par(fq, swing) :> _;
-
-// Outputs triggers on first output, and velocity (normalized) on second 
-sequencer(t, freq) = (res > 0) * (ph != ph'), res
-with {
-    sz = t : _,!;
-    ph = int(os.phasor(sz, freq)); 
-    res = t, ph : rdtable;
-};
-
-// Can choose the number of steps to read
-step_sequencer(t, size, freq) = (res > 0) * (ph != ph'), res
-with {
-    ph = int(os.phasor(size, freq)); 
-    res = t, ph : rdtable;
-};
-
-// Tempo adjusts so each step is equivalent
-beat_sequencer(t, size, freq) = (res > 0) * (ph != ph'), res
-with {
-    ph = int(os.phasor(size, freq / size)); 
-    res = t, ph : rdtable;
-};
-
- 
-// Tempo adjusts so each step is equivalent
-swing_sequencer(t,tswing, size, freq) = ((res > 0) * (ph != ph')) | swing, res
-with {
-    ph = int(os.phasor(size, freq / size));
-    sw = tswing, ph : rdtable; 
-    phstep = os.hs_phasor(1, freq, sw != sw');
-    swing = 0, 1 : select2(cond) : ba.impulsify
-    with {
-        cond = (phstep >= sw) & (phstep' <= sw);
-    };
-    
-    res = t, ph : rdtable;
-};
