@@ -1,8 +1,7 @@
-declare name            "faust_jo";
-declare version         "1.0";
-declare author          "Johann Philippe";
-declare license         "MIT";
-declare copyright       "(c) Johann Philippe 2022";
+/*
+	Quelques fonctions utiles que j'ai fabriquées 
+*/
+
 
 import("stdfaust.lib");
 
