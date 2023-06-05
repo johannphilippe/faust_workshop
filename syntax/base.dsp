@@ -1,25 +1,25 @@
-// Chaque expression finit avec ;
+// In Faust, expressions all end with semicolon;
+
+
+// Each Faust DSP must contain the process function. It is the audio processor.
 process = 0;
 
-// Chaque programme a une fonction process : c'est notre fonction audio. 
-
-// Commentaires : // pour une ligne, 
-       
+// Comments can be written in on line like this with // at the beginning
 /*
-pour plusieurs lignes
+	Or two lines with /* to begin and */ to end
 */
 
-// Syntaxe traditionnelle
+//Traditional syntax
 process = 1 + 0.5;
 
-// Composition séquentielle : l'opérateur + prend deux entrées et a une sortie
+// Sequential composition : the "+" operator has two inputs and one output.
 process = 1, 0.5 : +;
 
 
-//3 Signaux parallèles
+//Parallel signals 
 process = 1, 2, 3;
 
-// Idem
+// Exactly the same, written with "par" iteration (means parallel), generating 3 voices 
 process = par(n, 3, n+1);
 
 

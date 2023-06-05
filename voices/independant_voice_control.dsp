@@ -8,6 +8,7 @@ with {
 };
 hold_dur(duration, trig) = hold_smps(ba.sec2samp(duration), trig);
 
+// 8 voices 
 N_VOICES = 8;
 voice(n) = vgroup("voice_%n", os.osc(freq)*env)
 with {
@@ -22,5 +23,6 @@ with {
 };
 
 amp = hslider("amplitude", 0.1, 0, 1, 0.01) : si.smoo;
+// The "sum" primitive allows to sum any number of independant voices.
 process = sum(n, N_VOICES, voice(n) ) / N_VOICES * amp;
 
