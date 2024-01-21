@@ -6,9 +6,8 @@ declare copyright       "(c) Johann Philippe 2024";
 
 import("stdfaust.lib");
 
-NSRC = 1; 
-NSPEAKERS = 4;
-
+N_SRC = 3; 
+N_SPEAKERS = 4;
 /*
     DBAP - distance based amplitude panning 
     References : 
@@ -38,6 +37,7 @@ with {
                                                         : +(pow(z-zspeaker, 2))
                                                         : +(pow(rs, 2))
                                                         : sqrt;
+
     dia(x,y,z, xsp, ysp, zsp) = pow(distance(x, y, z, xsp, ysp, zsp, rs), (0.5*a(rolloff))); 
 
     amplitudes = par(n, nspeakers, op(n) )
@@ -57,22 +57,12 @@ with {
     };
 };
 
-/*
-    dbap : 
-    @arg NSRC is number of sources
-    @arg NSPEAKERS is number of speakers 
-    @arg rolloff is gain reduction factor in db
-    @arg rs is width of source
-    @arg srcs is a list of signal inputs
-*/
-
-dbap(NSRC, NSPEAKERS, rolloff, rs, srcs) = prod(n, NSRC, compute(n) )
+dbap = si.bus(N_SRC) : par(n, N_SRC, compute(n) ) :> si.bus(N_SPEAKERS)
 with {
-    compute(n) = par(n, NSPEAKERS, sig * amp(n) )
+    compute(n) = _ <: par(n, N_SPEAKERS, _ * amp(n))
     with {
-        amps = dbap_amps(n, NSPEAKERS, rolloff, rs);
-        amp(x) = amps : ba.selectn(NSPEAKERS, x);
-        sig = srcs : ba.selectn(NSRC, n);
+        amps = dbap_amps(n, N_SPEAKERS, rolloff, rs);
+        amp(x) = amps : ba.selectn(N_SPEAKERS, x);
     };
 };
 
@@ -96,11 +86,9 @@ rolloff = hslider("rolloff", 3, 1, 12, 0.01);
 rs = hslider("sourcewidth", 1, 0.1, 6, 0.01);
 
 gain = hslider("gain", 0.1, 0, 2, 0.001);
-amp = hslider("out_amp", 1, 0, 1, 0.001);
+outamp = hslider("out_amp", 1, 0, 1, 0.001);
 
-//process = dbap(src, NSPEAKERS, rolloff, rs) : par(n, NSPEAKERS, graphics(n));
-
-process = par(i, NSRC, _ * gain ) : dbap(NSRC, NSPEAKERS, rolloff, rs ) : par(n, NSPEAKERS, graphics(n)) : par(i, NSPEAKERS, _ * amp);
+process = dbap : par(n, N_SPEAKERS, graphics(n)) : par(i, N_SPEAKERS, _ * outamp);
 
 
 
