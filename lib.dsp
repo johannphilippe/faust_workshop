@@ -3,7 +3,6 @@
 */
 import("stdfaust.lib");
 
-round(sig) = floor(sig), ceil(sig) : select2( (sig -floor(sig)) > 0.5 ); 
 
 /*
 	Impulsion with a specified duration. Can be retriggered.
@@ -31,8 +30,10 @@ dur_smps_euclidian(onset, div, pulses, rotation, smps_dur, phasor) = euclidian(o
 /*
 	Wavefolder. 
 */
-wavefolder(sig) = 4 * (abs(0.25 * sig + 0.25 - round(0.25 * sig + 0.25))-0.25)
-
+wavefolder(lim, sig) = 4 * (abs(lim * sig + lim - rnd(lim * sig + lim))-lim)
+with {
+	rnd(sig) = floor(sig), ceil(sig) : select2( (sig -floor(sig)) > 0.5 ); 
+};
 
 /*
 	Limit to range
